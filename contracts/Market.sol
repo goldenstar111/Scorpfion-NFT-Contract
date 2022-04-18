@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol"; // security again
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
+
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
@@ -20,6 +21,12 @@ contract Marketplace is Ownable, ReentrancyGuard {
     IERC20 public usdt;
     IERC20 public mspc;
 
+    uint256 public cost1 = 0.005 ether;
+    uint256 public cost2 = 0.0125 ether;
+    uint256 public cost3 = 0.025 ether;
+    uint256 public cost4 = 0.05 ether;
+
+
     uint256 public royalties = 10;
     uint256 public minMspc = 0;
     uint256 public maxGiveAway = 1;
@@ -30,8 +37,7 @@ contract Marketplace is Ownable, ReentrancyGuard {
         uint256 tokenId;
         address payable author;
         address payable holder;
-        uint256 mspcPrice;
-        uint256 usdtPrice;
+        uint256 price;
         bool sold;
     }
 
@@ -45,8 +51,7 @@ contract Marketplace is Ownable, ReentrancyGuard {
         uint256 indexed tokenId,
         address author,
         address holder,
-        uint256 mspcPrice,
-        uint256 usdtPrice,
+        uint256 price,
         uint256 timeStamp,
         bool sold
     );
@@ -57,14 +62,14 @@ contract Marketplace is Ownable, ReentrancyGuard {
         uint256 indexed tokenId,
         address from,
         address to,
-        uint256 mspcPrice,
-        uint256 usdtPrice,
+        uint256 price,
         uint256 timeStamp
     );
 
-    constructor(address _usdt, address _mspc) {
-        usdt = IERC20(address(_usdt)); // Testing purpose
-        mspc = IERC20(address(_mspc)); // Testing purpose
+    constructor() {
+    // constructor(address _usdt, address _mspc) {
+        // usdt = IERC20(address(_usdt)); // Testing purpose
+        // mspc = IERC20(address(_mspc)); // Testing purpose
     }
     
     function mintItems(address MP, address MS) public {
@@ -94,7 +99,6 @@ contract Marketplace is Ownable, ReentrancyGuard {
             _tokenId,
             payable(msg.sender),
             payable(address(0)),
-            _mspcPrice,
             _usdtPrice,
             false
         );
@@ -108,7 +112,6 @@ contract Marketplace is Ownable, ReentrancyGuard {
             _tokenId,
             msg.sender,
             address(0),
-            _mspcPrice,
             _usdtPrice,
             block.timestamp,
             false
@@ -127,8 +130,8 @@ contract Marketplace is Ownable, ReentrancyGuard {
             IERC721(_nftContract).balanceOf(msg.sender) < maxGiveAway,
             "No more available.!"
         );
-        uint256 price = idToMarketItem[_itemId].usdtPrice;
-        require(_amountOfUsdt == price, "Not enough USDT");
+        // uint256 price = idToMarketItem[_itemId].usdtPrice;
+        // require(_amountOfUsdt == price, "Not enough USDT");
 
         uint256 tokenId = idToMarketItem[_itemId].tokenId;
         address preHolder = idToMarketItem[_itemId].holder;
@@ -138,27 +141,27 @@ contract Marketplace is Ownable, ReentrancyGuard {
 
         // transfer the amount to the author
         // idToMarketItem[itemId].author.transfer(msg.value);
-        if (preHolder != address(0)) {
-            uint256 amountToShareAuthor = (((price) * (royalties))) / 100;
-            uint256 amountToHolder = price - amountToShareAuthor;
-            usdt.transferFrom(
-                msg.sender,
-                idToMarketItem[_itemId].author,
-                amountToShareAuthor
-            );
+        // if (preHolder != address(0)) {
+        //     uint256 amountToShareAuthor = (((price) * (royalties))) / 100;
+        //     uint256 amountToHolder = price - amountToShareAuthor;
+        //     usdt.transferFrom(
+        //         msg.sender,
+        //         idToMarketItem[_itemId].author,
+        //         amountToShareAuthor
+        //     );
 
-            usdt.transferFrom(
-                msg.sender,
-                idToMarketItem[_itemId].holder,
-                amountToHolder
-            );
-        } else {
-            usdt.transferFrom(
-                msg.sender,
-                idToMarketItem[_itemId].author,
-                price
-            );
-        }
+        //     usdt.transferFrom(
+        //         msg.sender,
+        //         idToMarketItem[_itemId].holder,
+        //         amountToHolder
+        //     );
+        // } else {
+        //     usdt.transferFrom(
+        //         msg.sender,
+        //         idToMarketItem[_itemId].author,
+        //         price
+        //     );
+        // }
 
         tokensSold.increment();
 
@@ -172,7 +175,6 @@ contract Marketplace is Ownable, ReentrancyGuard {
             preHolder,
             msg.sender,
             0,
-            price,
             block.timestamp
         );
     }
@@ -196,29 +198,29 @@ contract Marketplace is Ownable, ReentrancyGuard {
         idToMarketItem[_itemId].sold = true;
 
         // transfer the amount to the author
-        if (preHolder != address(0)) {
-            uint256 amountToShareAuthor = (((_amountOfMspc) * (royalties))) /
-                100;
+        // if (preHolder != address(0)) {
+        //     uint256 amountToShareAuthor = (((_amountOfMspc) * (royalties))) /
+        //         100;
 
-            uint256 amountToHolder = _amountOfMspc - amountToShareAuthor;
-            mspc.transferFrom(
-                msg.sender,
-                idToMarketItem[_itemId].author,
-                amountToShareAuthor
-            );
+        //     uint256 amountToHolder = _amountOfMspc - amountToShareAuthor;
+        //     mspc.transferFrom(
+        //         msg.sender,
+        //         idToMarketItem[_itemId].author,
+        //         amountToShareAuthor
+        //     );
 
-            mspc.transferFrom(
-                msg.sender,
-                idToMarketItem[_itemId].holder,
-                amountToHolder
-            );
-        } else {
-            mspc.transferFrom(
-                msg.sender,
-                idToMarketItem[_itemId].holder,
-                _amountOfMspc
-            );
-        }
+        //     mspc.transferFrom(
+        //         msg.sender,
+        //         idToMarketItem[_itemId].holder,
+        //         amountToHolder
+        //     );
+        // } else {
+        //     mspc.transferFrom(
+        //         msg.sender,
+        //         idToMarketItem[_itemId].holder,
+        //         _amountOfMspc
+        //     );
+        // }
 
         tokensSold.increment();
 
@@ -231,7 +233,7 @@ contract Marketplace is Ownable, ReentrancyGuard {
             tokenId,
             preHolder,
             msg.sender,
-            _amountOfMspc,
+            // _amountOfMspc,
             0,
             block.timestamp
         );
@@ -368,28 +370,28 @@ contract Marketplace is Ownable, ReentrancyGuard {
         external
         onlyHolder(_nftId)
     {
-        idToMarketItem[_nftId].mspcPrice = _newPrice;
+        // idToMarketItem[_nftId].mspcPrice = _newPrice;
     }
 
     function updateUsdtPriceById(uint256 _nftId, uint256 _newPrice)
         external
         onlyHolder(_nftId)
     {
-        idToMarketItem[_nftId].usdtPrice = _newPrice;
+        // idToMarketItem[_nftId].usdtPrice = _newPrice;
     }
 
     function changeMspcPriceById(uint256 _nftId, uint256 _newPrice)
         external
         onlyOwner
     {
-        idToMarketItem[_nftId].mspcPrice = _newPrice;
+        // idToMarketItem[_nftId].mspcPrice = _newPrice;
     }
 
     function changeUsdtPriceById(uint256 _nftId, uint256 _newPrice)
         external
         onlyOwner
     {
-        idToMarketItem[_nftId].usdtPrice = _newPrice;
+        // idToMarketItem[_nftId].usdtPrice = _newPrice;
     }
 
     modifier onlyHolder(uint256 _nftId) {

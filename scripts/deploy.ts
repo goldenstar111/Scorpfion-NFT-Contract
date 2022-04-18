@@ -15,10 +15,13 @@ async function main() {
   let [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
   // We get the contract to deploy
   // const provider = new ethers.providers.Web3Provider();
+
+  /*
   const USDT = await ethers.getContractFactory("USDT");
   const usdt = await USDT.deploy();
   await usdt.deployed();
   console.log("USDT deployed to:", usdt.address);
+  */
 
   // await usdt.transfer(
   //   "0xD15388a7F80109e58685C0474365b302A2E34d5E",
@@ -37,10 +40,12 @@ async function main() {
   //   ethers.utils.formatEther(await usdt.balanceOf(await addr2.getAddress()))
   // );
 
+  /*
   const MSPC = await ethers.getContractFactory("MSPC");
   const mspc = await MSPC.deploy();
   await mspc.deployed();
   console.log("MSPC deployed to:", mspc.address);
+  */
 
   // await mspc.transfer(
   //   "0xD15388a7F80109e58685C0474365b302A2E34d5E",
@@ -63,19 +68,20 @@ async function main() {
   // );
 
   const Marketplace = await ethers.getContractFactory("Marketplace");
-  const marketplace = await Marketplace.deploy(usdt.address, mspc.address);
+  const marketplace = await Marketplace.deploy();
   await marketplace.deployed();
   console.log("Marketplace deployed to:", marketplace.address);
 
-  const Mr = await ethers.getContractFactory("Mr");
-  const mr = await Mr.deploy(marketplace.address);
-  await mr.deployed();
-  console.log("NFT Mr deployed to:", mr.address);
+  const ScorpionNFT = await ethers.getContractFactory("ScorpionNFT");
+  const Scorp = await ScorpionNFT.deploy();
+  // const Scorp = await ScorpionNFT.deploy(marketplace.address);
+  await Scorp.deployed();
+  console.log("NFT Scorp deployed to:", Scorp.address);
 
-  const Ms = await ethers.getContractFactory("Ms");
-  const ms = await Ms.deploy(marketplace.address);
-  await ms.deployed();
-  console.log("NFT Ms deployed to:", ms.address);
+  // const Ms = await ethers.getContractFactory("Ms");
+  // const ms = await Ms.deploy(marketplace.address);
+  // await ms.deployed();
+  // console.log("NFT Ms deployed to:", ms.address);
 
   // await nft.mintToken();
 
