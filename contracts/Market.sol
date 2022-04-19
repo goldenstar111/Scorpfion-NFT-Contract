@@ -11,6 +11,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "./NFT.sol";
 
 contract Marketplace is Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
@@ -26,7 +27,6 @@ contract Marketplace is Ownable, ReentrancyGuard {
     uint256 public cost3 = 0.025 ether;
     uint256 public cost4 = 0.05 ether;
 
-
     uint256 public royalties = 10;
     uint256 public minMspc = 0;
     uint256 public maxGiveAway = 1;
@@ -39,6 +39,8 @@ contract Marketplace is Ownable, ReentrancyGuard {
         address payable holder;
         uint256 price;
         bool sold;
+        bool minted;
+        uint256 level;
     }
 
     // tokenId return which MarketToken
@@ -66,7 +68,7 @@ contract Marketplace is Ownable, ReentrancyGuard {
         uint256 timeStamp
     );
 
-    constructor() {
+    constructor(string memory base_uri) {
     // constructor(address _usdt, address _mspc) {
         // usdt = IERC20(address(_usdt)); // Testing purpose
         // mspc = IERC20(address(_mspc)); // Testing purpose
