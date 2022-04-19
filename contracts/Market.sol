@@ -68,12 +68,62 @@ contract Marketplace is Ownable, ReentrancyGuard {
         uint256 timeStamp
     );
 
-    constructor(string memory base_uri) {
+    constructor() {
     // constructor(address _usdt, address _mspc) {
         // usdt = IERC20(address(_usdt)); // Testing purpose
         // mspc = IERC20(address(_mspc)); // Testing purpose
+        initNFTLevels();
     }
     
+    function initNFTLevels() private {
+        uint256 i = uint256(1);
+
+        //set super founder level to nfts
+        for(i = 1;i<=25; i++) {
+            makeMarketItem(uint256(4), i);
+        }
+
+        //set founder level to nfts
+        for(i = 26;i<=115; i++) {
+            makeMarketItem(uint256(3), i);
+        }
+
+        //set rare level to nfts
+        for(i = 116;i<=167; i++) {
+            makeMarketItem(uint256(2), i);
+        }
+
+        //set limited edition level to nfts
+        for(i = 168;i<=307; i++) {
+            makeMarketItem(uint256(1), i);
+        }
+    }
+
+    function makeMarketItem(uint256 level, uint256 id) private {
+        uint256 price = 1;
+
+        if(level == uint256(4))
+            price = cost4;
+        else if(level == uint256(3))
+            price = cost3;
+        else if(level == uint256(2))
+            price = cost2;
+        else if(level == uint256(1))
+            price = cost1;
+
+        idToMarketItem[id] = MarketItem(
+            id,
+            address(0),
+            id,
+            payable(address(0)),
+            payable(address(0)),
+            price,
+            false,
+            false,
+            level
+        );
+    }
+
     function mintItems(address MP, address MS) public {
         for(uint i=1; i<=5; i++) {
             mintMarketItem(MP, i, 8888, 8888);
