@@ -18,9 +18,10 @@ contract Marketplace is Ownable, ReentrancyGuard {
 
     Counters.Counter public itemIds;
     Counters.Counter public tokensSold;
+    Counters.Counter public Count_Minted;
+    Counters.Counter public Count_Listed;
 
-    IERC20 public usdt;
-    IERC20 public mspc;
+    address public ScorpionNFTAddr;
 
     uint256 public cost1 = 0.005 ether;
     uint256 public cost2 = 0.0125 ether;
@@ -44,7 +45,7 @@ contract Marketplace is Ownable, ReentrancyGuard {
     }
 
     // tokenId return which MarketToken
-    mapping(uint256 => MarketItem) private idToMarketItem;
+    mapping(uint256 => MarketItem) public idToMarketItem;
 
     // listen to events from front end applications
     event MarketItemMinted(
@@ -69,13 +70,18 @@ contract Marketplace is Ownable, ReentrancyGuard {
     );
 
     constructor() {
-    // constructor(address _usdt, address _mspc) {
-        // usdt = IERC20(address(_usdt)); // Testing purpose
-        // mspc = IERC20(address(_mspc)); // Testing purpose
-        initNFTLevels();
+
     }
     
-    function initNFTLevels() private {
+    function setScorp(address addr) public onlyOwner {
+        ScorpionNFTAddr = addr;
+    }
+
+    function check_minted(uint256 id) public view returns (bool) {
+        return idToMarketItem[id].minted;
+    }
+
+    function initNFTLevels() public onlyOwner {
         uint256 i = uint256(1);
 
         //set super founder level to nfts
@@ -123,48 +129,47 @@ contract Marketplace is Ownable, ReentrancyGuard {
             level
         );
     }
-
-    function mintItems(address MP, address MS) public {
-        for(uint i=1; i<=5; i++) {
-            mintMarketItem(MP, i, 8888, 8888);
-            mintMarketItem(MS, i, 8888, 8888);
-        }
-    }
    
+    function claim(address payable receiver) external onlyOwner {
+        receiver.transfer(address(this).balance);
+    }
+
     // @notice function to create a market to put it up for sale
     // @params _nftContract
     function mintMarketItem(
-        address _nftContract,
-        uint256 _tokenId,
-        uint256 _mspcPrice,
-        uint256 _usdtPrice
-    ) public nonReentrant {
-        require(_usdtPrice > 0, "Price must be more than one");
+        uint256 _tokenId
+    ) public payable nonReentrant {
+        require(idToMarketItem[_tokenId].minted == false, "This NFT Id is already minted");
 
-        itemIds.increment(); // start from 1
-        uint256 itemId = itemIds.current();
+        uint256 _defaultprice = idToMarketItem[_tokenId].price;
+        require(msg.value >= _defaultprice, "This NFT should be paid to mint");
+
+        // itemIds.increment(); // start from 1
+        Count_Minted.increment(); // start from 1
+
+        // uint256 itemId = itemIds.current();
 
         //putting it up for sale
-        idToMarketItem[itemId] = MarketItem(
-            itemId,
-            _nftContract,
-            _tokenId,
-            payable(msg.sender),
-            payable(address(0)),
-            _usdtPrice,
-            false
-        );
+        // MarketItem memory tmp_item = idToMarketItem[itemId];
+        idToMarketItem[_tokenId].holder = payable(msg.sender);
+        idToMarketItem[_tokenId].nftContract = ScorpionNFTAddr;
+        idToMarketItem[_tokenId].author = payable(msg.sender);
+        idToMarketItem[_tokenId].minted = true;
+        idToMarketItem[_tokenId].sold = false;
 
         // NFT transaction
-        IERC721(_nftContract).transferFrom(msg.sender, address(this), _tokenId);
+        // IERC721(ScorpionNFTAddr).transferFrom(msg.sender, address(this), _tokenId);
+        // IERC721(ScorpionNFTAddr).transferFrom(address(this), msg.sender, _tokenId);
+        // ScorpionNFT(ScorpionNFTAddr).mintToken(_tokenId);
+        payable(msg.sender).transfer(_tokenId);
 
         emit MarketItemMinted(
-            itemId,
-            _nftContract,
+            _tokenId,
+            ScorpionNFTAddr,
             _tokenId,
             msg.sender,
-            address(0),
-            _usdtPrice,
+            msg.sender,
+            _defaultprice,
             block.timestamp,
             false
         );

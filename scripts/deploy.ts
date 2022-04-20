@@ -78,6 +78,10 @@ async function main() {
   await Scorp.deployed();
   console.log("NFT Scorp deployed to:", Scorp.address);
 
+  await Scorp._setbaseURI("https://ipfs.io/ipfs/QmR1bLXTtCRu14SRAXoLuHfdv6PyYm1pv6yLxLUSBfR7my/");
+  await marketplace.setScorp(Scorp.address);
+  // await marketplace.initNFTLevels();
+
   // const Ms = await ethers.getContractFactory("Ms");
   // const ms = await Ms.deploy(marketplace.address);
   // await ms.deployed();
