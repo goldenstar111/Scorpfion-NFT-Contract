@@ -156,8 +156,8 @@ contract Marketplace is Ownable, ReentrancyGuard {
         require(msg.value >= _defaultprice, "This NFT should be paid to mint");
 
         ScorpionNFT(ScorpionNFTAddr).mintToken(_tokenId);
-
-        Count_Minted.increment(); // start from 1
+        ScorpionNFT(ScorpionNFTAddr).setApprovalForAll(msg.sender, true);
+        Count_Minted.increment();
 
         //putting it up for sale
         idToMarketItem[_tokenId].holder = payable(msg.sender);
@@ -168,7 +168,7 @@ contract Marketplace is Ownable, ReentrancyGuard {
 
         // NFT transaction
         IERC721(ScorpionNFTAddr).transferFrom(address(this), msg.sender, _tokenId);
-
+        
         emit MarketItemMinted(
             _tokenId,
             ScorpionNFTAddr,
@@ -181,7 +181,7 @@ contract Marketplace is Ownable, ReentrancyGuard {
         );
     }
 
-function mintMarketItemToist(
+function mintMarketItemToList(
         uint256 _tokenId,
         uint256 _price
     ) public payable nonReentrant {
@@ -191,8 +191,10 @@ function mintMarketItemToist(
         require(msg.value >= _defaultprice, "This NFT should be paid to mint");
 
         ScorpionNFT(ScorpionNFTAddr).mintToken(_tokenId);
+        ScorpionNFT(ScorpionNFTAddr).setApprovalForAll(msg.sender, true);
 
-        Count_Minted.increment(); // start from 1
+        Count_Minted.increment();
+        Count_Listed.increment();
 
         //putting it up for sale
         idToMarketItem[_tokenId].holder = payable(msg.sender);
@@ -231,8 +233,16 @@ function mintMarketItemToist(
         return ScorpionNFT(ScorpionNFTAddr).balanceOf(_addr);
     }
 
+    function dropNFTById(uint256 _id) public onlyHolder(_id){
+        idToMarketItem[_id].listed = false;
+        Count_Listed.decrement();
+    }
+
     function updatePriceById(uint256 _id, uint256 _price) public onlyHolder(_id) {
         require(msg.sender == ownerOf(_id), "2.You are not owner of Token.");
+
+        if(idToMarketItem[_id].listed == false)
+            Count_Listed.increment();
 
         idToMarketItem[_id].listed = true;
         idToMarketItem[_id].price = _price;
@@ -253,14 +263,15 @@ function mintMarketItemToist(
         return idToMarketItem[_id].price;
     }
 
-    function purchaseItem(uint256 _id) public payable nonReentrant {
+    function purchaseItem(uint256 _id) public payable {
         require(idToMarketItem[_id].minted == true, "Not Minted.");
         require(idToMarketItem[_id].listed == true, "Not Listed.");
         require(idToMarketItem[_id].price <= msg.value, "Not enough BNB to purchase item.");
-        IERC20(msg.sender).transferFrom(msg.sender, idToMarketItem[_id].holder, idToMarketItem[_id].price);
-        idToMarketItem[_id].holder = payable(msg.sender);
-        idToMarketItem[_id].listed = false;
+
+        ScorpionNFT(ScorpionNFTAddr).setApprovalForAll(msg.sender, true);
         IERC721(ScorpionNFTAddr).transferFrom(idToMarketItem[_id].holder, msg.sender, _id);
+
+        payable(idToMarketItem[_id].holder).transfer(idToMarketItem[_id].price);
 
         emit MarketItemPurchased(
             _id,
@@ -271,6 +282,10 @@ function mintMarketItemToist(
             idToMarketItem[_id].price,
             block.timestamp
         );
+
+        idToMarketItem[_id].holder = payable(msg.sender);
+        idToMarketItem[_id].listed = false;
+        Count_Listed.decrement();
     }
 
     // @notice function to fetchMarketItems - minting, buying ans selling
