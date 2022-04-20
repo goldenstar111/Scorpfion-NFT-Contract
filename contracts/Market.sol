@@ -17,7 +17,6 @@ contract Marketplace is Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
 
     Counters.Counter public itemIds;
-    Counters.Counter public tokensSold;
     Counters.Counter public Count_Minted;
     Counters.Counter public Count_Listed;
 
@@ -29,8 +28,6 @@ contract Marketplace is Ownable, ReentrancyGuard {
     uint256 public cost4 = 0.05 ether;
 
     uint256 public royalties = 10;
-    uint256 public minMspc = 0;
-    uint256 public maxGiveAway = 1;
 
     struct MarketItem {
         uint256 itemId;
@@ -46,6 +43,8 @@ contract Marketplace is Ownable, ReentrancyGuard {
 
     // tokenId return which MarketToken
     mapping(uint256 => MarketItem) public idToMarketItem;
+    // Id List return by holder
+    mapping(address => uint256[]) private holderToItems;
 
     // listen to events from front end applications
     event MarketItemMinted(
@@ -169,6 +168,8 @@ contract Marketplace is Ownable, ReentrancyGuard {
         // NFT transaction
         IERC721(ScorpionNFTAddr).transferFrom(address(this), msg.sender, _tokenId);
         
+        addItemsbyHolder(msg.sender, _tokenId);
+
         emit MarketItemMinted(
             _tokenId,
             ScorpionNFTAddr,
@@ -206,6 +207,8 @@ function mintMarketItemToList(
 
         // NFT transaction
         IERC721(ScorpionNFTAddr).transferFrom(address(this), msg.sender, _tokenId);
+
+        addItemsbyHolder(msg.sender, _tokenId);
 
         emit MarketItemMinted(
             _tokenId,
@@ -271,6 +274,9 @@ function mintMarketItemToList(
         ScorpionNFT(ScorpionNFTAddr).setApprovalForAll(msg.sender, true);
         IERC721(ScorpionNFTAddr).transferFrom(idToMarketItem[_id].holder, msg.sender, _id);
 
+        addItemsbyHolder(msg.sender, _id);
+        removeItemsbyHolder(idToMarketItem[_id].holder, _id);
+
         payable(idToMarketItem[_id].holder).transfer(idToMarketItem[_id].price);
 
         emit MarketItemPurchased(
@@ -288,118 +294,34 @@ function mintMarketItemToList(
         Count_Listed.decrement();
     }
 
-    // @notice function to fetchMarketItems - minting, buying ans selling
-    // @return the number of unsold items
-    function fetchMarketItemByAddress(address _nftContract)
-        external
-        view
-        returns (MarketItem[] memory)
-    {
-        uint256 itemCount = itemIds.current();
-        uint256 unsoldItemCount = itemIds.current() - tokensSold.current();
-        uint256 currentIndex = 0;
-
-        // looping over the number of items created (if number has not been sold populate the array)
-        MarketItem[] memory items = new MarketItem[](unsoldItemCount);
-        for (uint256 i = 0; i < itemCount; i++) {
-            if (idToMarketItem[i + 1].holder == address(0)) {
-                if (idToMarketItem[i + 1].nftContract == _nftContract) {
-                    uint256 currentId = i + 1;
-                    MarketItem memory currentItem = idToMarketItem[currentId];
-                    items[currentIndex] = currentItem;
-                    currentIndex += 1;
-                }
-            }
-        }
-        return items;
+    function addItemsbyHolder(address _holder, uint256 _id) private {
+        holderToItems[_holder].push(_id);
     }
 
-    function fetchMarketItemsWithCursor(uint256 cursor, uint256 howMany)
-        external
-        view
-        returns (MarketItem[] memory, uint256 newCursor)
-    {
-        uint256 itemCount = itemIds.current();
-        uint256 currentIndex = 0;
-        uint k = 0;
-        /*
-        if (length > itemCount - cursor) {
-            length = itemCount - cursor;
-        }
-        */
-
-        MarketItem[] memory items = new MarketItem[](howMany);
-
-        for (uint256 i = 1; i <= itemCount; i++) {
-            if (idToMarketItem[i].holder == address(0)) {
-                if (k >= cursor) {
-                    items[currentIndex++] = idToMarketItem[i];
-                    if (currentIndex==howMany) break;
-                }
-                k++;
-            }
-        }
-
-        return (items, cursor + k);
+    function itemsbyholder(address _holder) public view returns (uint256[] memory) {
+        return holderToItems[_holder];
     }
 
-    function getMarketItemCount() external view returns (uint256) {
-        uint256 marketItemCount = itemIds.current() - tokensSold.current();
-        return marketItemCount;
+    function removeItemsbyHolder(address _holder, uint256 _id) private {
+        uint256 _len = holderToItems[_holder].length;
+        for (uint256 index = 0; index < _len; index++) {
+            if(holderToItems[_holder][index] == _id){
+                holderToItems[_holder][index] = holderToItems[_holder][_len-1];
+                holderToItems[_holder].pop();
+                break;
+            }
+        }
     }
 
     // return nfts that the user has purchased
-    function fetchMyNFTs() public view returns (MarketItem[] memory) {
-        uint256 totalItemCount = itemIds.current();
-        // a second counter for each individual user
-        uint256 itemCount = 0;
-        uint256 currentIndex = 0;
-
-        for (uint256 i = 0; i < totalItemCount; i++) {
-            if (idToMarketItem[i + 1].holder == msg.sender) {
-                itemCount += 1;
-            }
+    function fetchMyNFTs(address _holder) public view returns (MarketItem[] memory) {
+        uint256[] memory tmp_items = itemsbyholder(_holder);
+        MarketItem[] memory items = new MarketItem[](tmp_items.length);
+        
+        for (uint256 index = 0; index < tmp_items.length; index++) {
+            items[index] = idToMarketItem[tmp_items[index]];
         }
 
-        // second loop to loop through the amount you have purchased with itemcount
-        // check to see if the holder address is equal to msg.sender
-        MarketItem[] memory items = new MarketItem[](itemCount);
-        for (uint256 i = 0; i < totalItemCount; i++) {
-            if (idToMarketItem[i + 1].holder == msg.sender) {
-                uint256 currentId = idToMarketItem[i + 1].itemId;
-                // current array
-                MarketItem memory currentItem = idToMarketItem[currentId];
-                items[currentIndex] = currentItem;
-                currentIndex += 1;
-            }
-        }
-        return items;
-    }
-
-    // function for returning an array of minted nfts
-    function fetchItemsCreated() public view returns (MarketItem[] memory) {
-        // instead of .holder it will be the .author
-        uint256 totalItemCount = itemIds.current();
-        uint256 itemCount = 0;
-        uint256 currentIndex = 0;
-
-        for (uint256 i = 0; i < totalItemCount; i++) {
-            if (idToMarketItem[i + 1].author == msg.sender) {
-                itemCount += 1;
-            }
-        }
-
-        // second loop to loop through the amount you have purchased with itemcount
-        // check to see if the holder address is equal to msg.sender
-        MarketItem[] memory items = new MarketItem[](itemCount);
-        for (uint256 i = 0; i < totalItemCount; i++) {
-            if (idToMarketItem[i + 1].author == msg.sender) {
-                uint256 currentId = idToMarketItem[i + 1].itemId;
-                MarketItem memory currentItem = idToMarketItem[currentId];
-                items[currentIndex] = currentItem;
-                currentIndex += 1;
-            }
-        }
         return items;
     }
 
