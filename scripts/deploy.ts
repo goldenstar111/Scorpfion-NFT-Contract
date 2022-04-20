@@ -16,56 +16,6 @@ async function main() {
   // We get the contract to deploy
   // const provider = new ethers.providers.Web3Provider();
 
-  /*
-  const USDT = await ethers.getContractFactory("USDT");
-  const usdt = await USDT.deploy();
-  await usdt.deployed();
-  console.log("USDT deployed to:", usdt.address);
-  */
-
-  // await usdt.transfer(
-  //   "0xD15388a7F80109e58685C0474365b302A2E34d5E",
-  //   ethers.utils.parseEther("1000")
-  // );
-  // console.log(
-  //   "USDT Addr1:",
-  //   ethers.utils.formatEther(await usdt.balanceOf(await addr1.getAddress()))
-  // );
-  // await usdt.transfer(
-  //   await addr2.getAddress(),
-  //   ethers.utils.parseEther("1000")
-  // );
-  // console.log(
-  //   "USDT Addr2:",
-  //   ethers.utils.formatEther(await usdt.balanceOf(await addr2.getAddress()))
-  // );
-
-  /*
-  const MSPC = await ethers.getContractFactory("MSPC");
-  const mspc = await MSPC.deploy();
-  await mspc.deployed();
-  console.log("MSPC deployed to:", mspc.address);
-  */
-
-  // await mspc.transfer(
-  //   "0xD15388a7F80109e58685C0474365b302A2E34d5E",
-  //   ethers.utils.parseEther("1000")
-  // );
-
-  // console.log(
-  //   "MSPC Addr1:",
-  //   ethers.utils.formatEther(await mspc.balanceOf(await addr1.getAddress()))
-  // );
-
-  // await mspc.transfer(
-  //   await addr2.getAddress(),
-  //   ethers.utils.parseEther("1000")
-  // );
-
-  // console.log(
-  //   "MSPC Addr2:",
-  //   ethers.utils.formatEther(await mspc.balanceOf(await addr2.getAddress()))
-  // );
 
   const Marketplace = await ethers.getContractFactory("Marketplace");
   const marketplace = await Marketplace.deploy();
@@ -79,6 +29,10 @@ async function main() {
   console.log("NFT Scorp deployed to:", Scorp.address);
 
   await Scorp._setbaseURI("https://ipfs.io/ipfs/QmR1bLXTtCRu14SRAXoLuHfdv6PyYm1pv6yLxLUSBfR7my/");
+  await Scorp.setApprovalForAll(marketplace.address, true);
+  // const owneraddr = await owner.getAddress();
+  // await Scorp.setApprovalForAll(owneraddr, true);
+
   await marketplace.setScorp(Scorp.address);
   // await marketplace.initNFTLevels();
 

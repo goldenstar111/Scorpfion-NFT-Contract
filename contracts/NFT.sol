@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract ScorpionNFT is ERC721, Ownable {
-// contract ScorpionNFT is ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
     using Strings for uint256;
 
@@ -18,7 +17,7 @@ contract ScorpionNFT is ERC721, Ownable {
     }
     
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
+        // require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
 
         string memory baseURI = _baseURI();
         uint256 tmpid = tokenId - 1;
@@ -42,7 +41,5 @@ contract ScorpionNFT is ERC721, Ownable {
 
     function mintToken(uint256 id) public {
         _mint(msg.sender, id);
-        // setApprovalForAll allows marketplace to do that with contract address
-        // setApprovalForAll(marketplaceAddress, true);
     }
 }
