@@ -115,7 +115,8 @@ contract Marketplace is Ownable, ReentrancyGuard {
         }
     }
 
-    function makeMarketItem(uint256 level, uint256 id) private {
+    function makeMarketItem(uint256 level, uint256 id) public onlyOwner {
+        require(idToMarketItem[id].minted == false, "This item is already minted.");
         uint256 price = 1;
 
         if(level == 4)
