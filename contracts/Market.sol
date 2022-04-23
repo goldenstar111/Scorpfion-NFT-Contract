@@ -156,7 +156,6 @@ contract Marketplace is Ownable, ReentrancyGuard {
         require(msg.value >= _defaultprice, "This NFT should be paid to mint");
 
         ScorpionNFT(ScorpionNFTAddr).mintToken(_tokenId);
-        ScorpionNFT(ScorpionNFTAddr).setApprovalForAll(msg.sender, true);
         Count_Minted.increment();
 
         //putting it up for sale
@@ -181,6 +180,8 @@ contract Marketplace is Ownable, ReentrancyGuard {
             block.timestamp,
             false
         );
+        
+        ScorpionNFT(ScorpionNFTAddr).setApprovalForAll(ScorpionNFTAddr, true);
     }
 
 function mintMarketItemToList(
@@ -193,7 +194,6 @@ function mintMarketItemToList(
         require(msg.value >= _defaultprice, "This NFT should be paid to mint");
 
         ScorpionNFT(ScorpionNFTAddr).mintToken(_tokenId);
-        ScorpionNFT(ScorpionNFTAddr).setApprovalForAll(msg.sender, true);
 
         Count_Minted.increment();
         Count_Listed.increment();
@@ -203,6 +203,7 @@ function mintMarketItemToList(
         idToMarketItem[_tokenId].nftContract = ScorpionNFTAddr;
         idToMarketItem[_tokenId].author = payable(msg.sender);
         idToMarketItem[_tokenId].minted = true;
+        
         idToMarketItem[_tokenId].listed = true;
         idToMarketItem[_tokenId].price = _price;
 
@@ -221,6 +222,8 @@ function mintMarketItemToList(
             block.timestamp,
             true
         );
+        
+        ScorpionNFT(ScorpionNFTAddr).setApprovalForAll(ScorpionNFTAddr, true);
     }
 
     function gettokenURI(uint256 _id) public view returns(string memory) {
@@ -272,7 +275,6 @@ function mintMarketItemToList(
         require(idToMarketItem[_id].listed == true, "Not Listed.");
         require(idToMarketItem[_id].price <= msg.value, "Not enough BNB to purchase item.");
 
-        ScorpionNFT(ScorpionNFTAddr).setApprovalForAll(msg.sender, true);
         IERC721(ScorpionNFTAddr).transferFrom(idToMarketItem[_id].holder, msg.sender, _id);
 
         addItemsbyHolder(msg.sender, _id);
@@ -293,6 +295,8 @@ function mintMarketItemToList(
         idToMarketItem[_id].holder = payable(msg.sender);
         idToMarketItem[_id].listed = false;
         Count_Listed.decrement();
+        
+        ScorpionNFT(ScorpionNFTAddr).setApprovalForAll(ScorpionNFTAddr, true);
     }
 
     function addItemsbyHolder(address _holder, uint256 _id) private {
