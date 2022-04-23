@@ -28,7 +28,7 @@ async function main() {
   await Scorp.deployed();
   console.log("NFT Scorp deployed to:", Scorp.address);
 
-  await Scorp._setbaseURI("https://ipfs.io/ipfs/QmR1bLXTtCRu14SRAXoLuHfdv6PyYm1pv6yLxLUSBfR7my/");
+  await Scorp._setbaseURI("https://ipfs.io/ipfs/QmbXPpx3KW36Ri6uAjq48qWbbnCaeDx1nT5iYUukkwo7uu/");
   await Scorp.setApprovalForAll(marketplace.address, true);
   // const owneraddr = await owner.getAddress();
   // await Scorp.setApprovalForAll(owneraddr, true);

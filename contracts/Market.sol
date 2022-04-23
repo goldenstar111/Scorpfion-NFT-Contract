@@ -113,6 +113,26 @@ contract Marketplace is Ownable, ReentrancyGuard {
         for(i = 168;i<=307; i++) {
             makeMarketItem(1, i);
         }
+
+        //set super founder level to nfts island
+        for(i = 308;i<=311; i++) {
+            makeMarketItem(4, i);
+        }
+
+        //set founder level to nfts island
+        for(i = 312;i<=322; i++) {
+            makeMarketItem(3, i);
+        }
+
+        //set rare level to nfts island
+        for(i = 323;i<=347; i++) {
+            makeMarketItem(2, i);
+        }
+
+        //set limited edition level to nfts island
+        for(i = 348;i<=407; i++) {
+            makeMarketItem(1, i);
+        }
     }
 
     function makeMarketItem(uint256 level, uint256 id) public onlyOwner {
